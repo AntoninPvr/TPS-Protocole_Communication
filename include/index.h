@@ -34,7 +34,29 @@ const char MesureADC[] PROGMEM = R"=====(
         <p>Capteur: MCP9808</p>
         <p> Nombre de capteur: 2</p>
         <h2> Mesure ADC </h2>
-        <p> GPIO 33: XX LSB </p>
+        <br> ADC: <span class="reading"></span> </br>
+
+        <script>
+        setInterval( function(){getData();}, 2000);
+        function getData()
+        {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200)
+        {
+        var count;
+        var num_an = this.responseXML.getElementsByTagName('reading').length;
+        for (count = 0; count < num_an; count++)
+        {
+        document.getElementsByClassName("reading")[count].innerHTML =
+        this.responseXML.getElementsByTagName('reading')[count].childNodes[0].nodeValue;
+        }
+        }
+        };
+        xhttp.open("GET", "readADC", true);
+        xhttp.send();
+        }
+    </script>
     </body>
 </html>
 )=====";

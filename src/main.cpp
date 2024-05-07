@@ -55,6 +55,7 @@ void handleRoot();
 void handleADC(); 
 void handleMCP0();
 void handleMCP1();
+void handleADC_Javascript();
 void handleNotFound(); //Texte brute envoyé en cas de page inconnue
 
 
@@ -85,6 +86,7 @@ void setup() {
   server.on("/ADC", handleADC);     //Redirection vers la fonction gestionnaire de la page web /hello
   server.on("/MCP0", handleMCP0);     //Redirection vers la fonction gestionnaire de la page web /hello
   server.on("/MCP1", handleMCP1);     //Redirection vers la fonction gestionnaire de la page web /hello
+  server.on("/readADC", handleADC_Javascript);     //Redirection vers la fonction gestionnaire de la page web /hello
   server.onNotFound(handleNotFound);    //Redirection vers la fonction gestionnaire de page web invalide
   server.begin();      
 }
@@ -145,7 +147,6 @@ void handleNotFound() {server.send(404, "text/plain", "404: Not found");} //Text
 void handleADC()
 {
   String s = MesureADC;                  //Page HTML décrite dans index.h
-  s.replace("XX",String(analogRead(33)));     //Mise à jour de l'heure à afficher sur la page
   server.send(200, "text/html", s);      //Send web page
 }
 
@@ -161,5 +162,12 @@ void handleMCP1()
   String s = MesureMCP1;                  //Page HTML décrite dans index.h
   s.replace("XX",String(tempsensor_1.readTempC()));     //Mise à jour de l'heure à afficher sur la page
   server.send(200, "text/html", s);      //Send web page
+}
+
+void handleADC_Javascript()
+{
+int Vpot = random(0,4095);
+String ADCdata =String("<?xml version = \"1.0\" ?><inputs><reading>")+String(Vpot)+String("</reading></inputs>");
+server.send(200,"text/xml",ADCdata);
 }
 //-----------------------------------------------------------------------

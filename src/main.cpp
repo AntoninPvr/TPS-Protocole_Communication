@@ -1,10 +1,21 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
+// Code ESP32 pour configurer un point d'accès WiFi hébergeant une page web simple
+#include <WiFi.h>
+#include <WebServer.h>
+#include "index.h"                      // index.h contient le contenu des pages HTML
+
+//---Déclaration des identifiants du point d'accès WiFi
+const char* ssid     = "NodeMCUx_Anto";      //Nom du réseau WiFi que vous allez créer
+const char* password = "123456789";     //mot de passe du réseau (8 caractères min)
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 tempsensor_0 = Adafruit_MCP9808();
 Adafruit_MCP9808 tempsensor_1 = Adafruit_MCP9808();
+
+// WiFi
+WebServer server(80);   
 
 // Timing
 // =================
@@ -39,6 +50,11 @@ union AlertConfig {
 // =================
 void enable_alert(uint16_t temp);
 uint16_t temp_2_bit(uint16_t temp);
+//------------Déclaration des gestionnaires des requêtes HTTP------------
+void handleRoot();
+void handleHello(); 
+void handleNotFound(); //Texte brute envoyé en cas de page inconnue
+
 
 void setup() {
   Serial.begin(115200);
@@ -60,6 +76,13 @@ void setup() {
   //  2    0.125°C     130 ms
   //  3    0.0625°C    250 ms
   enable_alert(27);
+  WiFi.mode(WIFI_AP);                   //Access Point mode
+  WiFi.softAP(ssid,password);           //Init du Point d'Acces  WiFi
+  Serial.print(WiFi.softAPIP());        //Affichage de l'adresse IP du Point d'Acces WiFi
+  server.on("/", handleRoot);           //Redirection vers la fonction gestionnaire de la page web racine
+  server.on("/hello", handleHello);     //Redirection vers la fonction gestionnaire de la page web /hello
+  server.onNotFound(handleNotFound);    //Redirection vers la fonction gestionnaire de page web invalide
+  server.begin();      
 }
 
 void loop() {
@@ -81,6 +104,7 @@ void loop() {
     Serial.print(c_0 - c_1);
     Serial.print("C\n");
   }
+  server.handleClient();   
 }
 
 void enable_alert(uint16_t temp) {
@@ -104,3 +128,25 @@ void enable_alert(uint16_t temp) {
 uint16_t temp_2_bit(uint16_t temp) {
   return temp << 4;
 }
+
+//------------Déclaration des gestionnaires des requêtes HTTP------------
+void handleRoot() 
+ {
+ String s = MAIN_page;                  //Page HTML décrite dans index.h
+ s.replace("XXX",String(millis()));     //Mise à jour de l'heure à afficher sur la page
+ server.send(200, "text/html", s);      //Send web page
+ }
+
+void handleHello()    
+ {
+  String message = "<!DOCTYPE html>";   //Page HTML décrite directement ici
+  message       += " <html>";
+  message       += "   <body> ";
+  message       += "       <h1>ESP32 Sensor Station Server</h1>";
+  message       += "       <br> Hello World ";
+  message       += "   </body>";
+  message       += " </html>";
+  server.send(200, "text/html", message);
+ }
+void handleNotFound() {server.send(404, "text/plain", "404: Not found");} //Texte brute envoyé en cas de page inconnue
+//-----------------------------------------------------------------------

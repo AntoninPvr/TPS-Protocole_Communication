@@ -52,7 +52,9 @@ void enable_alert(uint16_t temp);
 uint16_t temp_2_bit(uint16_t temp);
 //------------Déclaration des gestionnaires des requêtes HTTP------------
 void handleRoot();
-void handleHello(); 
+void handleADC(); 
+void handleMCP0();
+void handleMCP1();
 void handleNotFound(); //Texte brute envoyé en cas de page inconnue
 
 
@@ -80,7 +82,9 @@ void setup() {
   WiFi.softAP(ssid,password);           //Init du Point d'Acces  WiFi
   Serial.print(WiFi.softAPIP());        //Affichage de l'adresse IP du Point d'Acces WiFi
   server.on("/", handleRoot);           //Redirection vers la fonction gestionnaire de la page web racine
-  server.on("/hello", handleHello);     //Redirection vers la fonction gestionnaire de la page web /hello
+  server.on("/ADC", handleADC);     //Redirection vers la fonction gestionnaire de la page web /hello
+  server.on("/MCP0", handleMCP0);     //Redirection vers la fonction gestionnaire de la page web /hello
+  server.on("/MCP1", handleMCP1);     //Redirection vers la fonction gestionnaire de la page web /hello
   server.onNotFound(handleNotFound);    //Redirection vers la fonction gestionnaire de page web invalide
   server.begin();      
 }
@@ -136,17 +140,26 @@ void handleRoot()
  s.replace("XXX",String(millis()));     //Mise à jour de l'heure à afficher sur la page
  server.send(200, "text/html", s);      //Send web page
  }
-
-void handleHello()    
- {
-  String message = "<!DOCTYPE html>";   //Page HTML décrite directement ici
-  message       += " <html>";
-  message       += "   <body> ";
-  message       += "       <h1>ESP32 Sensor Station Server</h1>";
-  message       += "       <br> Hello World ";
-  message       += "   </body>";
-  message       += " </html>";
-  server.send(200, "text/html", message);
- }
 void handleNotFound() {server.send(404, "text/plain", "404: Not found");} //Texte brute envoyé en cas de page inconnue
+
+void handleADC()
+{
+  String s = MesureADC;                  //Page HTML décrite dans index.h
+  s.replace("XX",String(analogRead(33)));     //Mise à jour de l'heure à afficher sur la page
+  server.send(200, "text/html", s);      //Send web page
+}
+
+void handleMCP0()
+{
+  String s = MesureMCP0;                  //Page HTML décrite dans index.h
+  s.replace("XX",String(tempsensor_0.readTempC()));     //Mise à jour de l'heure à afficher sur la page
+  server.send(200, "text/html", s);      //Send web page
+}
+
+void handleMCP1()
+{
+  String s = MesureMCP1;                  //Page HTML décrite dans index.h
+  s.replace("XX",String(tempsensor_1.readTempC()));     //Mise à jour de l'heure à afficher sur la page
+  server.send(200, "text/html", s);      //Send web page
+}
 //-----------------------------------------------------------------------
